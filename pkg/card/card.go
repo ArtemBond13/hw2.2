@@ -2,6 +2,7 @@ package card
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -95,4 +96,40 @@ func (s *Service) IsValidMyCardBank(cardNumber string) error  {
 		}
 	}
 	return nil
+}
+
+
+var ErrNotValidCard = errors.New("there card isn't validity")
+
+// LunaAlgorithm возвращает ощибку если
+func LunaAlgorithm(card string) error {
+	card = strings.ReplaceAll(card, " ", "")
+	cardSlice := strings.Split(card, "")
+	sNum := make([]int, len(cardSlice))
+	sum1 := 0
+	sum2 := 0
+	for i, val := range cardSlice {
+		sNum[i], _ = strconv.Atoi(val)
+	}
+
+	for i, num := range sNum {
+		if i % 2 ==0 {
+			num *= 2
+			if num > 9 {
+				num -= 9
+			}
+			sum1 += num
+		} else {
+			sum2 += num
+		}
+	}
+
+	totalSum := sum1 + sum2
+
+	if totalSum % 10 == 0 {
+		return  nil
+	}else {
+		return ErrNotValidCard
+
+	}
 }
