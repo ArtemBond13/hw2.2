@@ -36,11 +36,11 @@ func TestService_Card2Card(t *testing.T) {
 		{name: "MyCardBank->OtherCardBank, money enough", fields: fields{cardSVC, 0.5, 10_00},
 			args: args{"8956", "1234", 100_00}, want: 110_00, wantErr: false},
 		{name: "MyCardBank->OtherCardBank, money not enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"7645", "1234", 1000_00}, want: 1010_00, wantErr: false},
+			args: args{"7645", "1234", 1000_00}, want: 1010_00, wantErr: true},
 		{name: "OtherCardBank->MyCardBank", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"1234", "7812", 100_00}, want: 110_00, wantErr: true},
+			args: args{"1234", "7812", 100_00}, want: 110_00, wantErr: false},
 		{name: "OtherCardBank->OtherCardBank", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"9876", "1234", 100_00}, want: 1010_00, wantErr: true},
+			args: args{"9876", "1234", 100_00}, want: 110_00, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
