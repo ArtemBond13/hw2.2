@@ -1,5 +1,10 @@
 package card
 
+import (
+	"errors"
+	"strings"
+)
+
 // Card абстракция банковской карты
 type Card struct {
 	Id       int64
@@ -55,7 +60,7 @@ func (s *Service) SearchById(id int64) *Card {
 	return nil
 }
 
-func (s Service) FindById(id int64) (*Card, bool) {
+func (s *Service) FindById(id int64) (*Card, bool) {
 	for _, card := range s.Cards {
 		if card.Id == id {
 			return card, true
@@ -76,4 +81,18 @@ func (s *Service) IssuerCard(id int64, issuer string, balance int64, number stri
 	}
 	s.Cards = append(s.Cards, card)
 	return card
+}
+
+var ErrMyCardNotValid = errors.New("there card not found my service")
+// IsValidMyCardBank возвращает ошибку если карты нету в Сервисе 
+func (s *Service) IsValidMyCardBank(cardNumber string) error  {
+	prefix := "5106 21"
+	for _, card := range s.Cards {
+		if strings.HasPrefix(card.Number, prefix) == true{
+			if card.Number != cardNumber {
+				return  ErrMyCardNotValid
+			}
+		}
+	}
+	return nil
 }

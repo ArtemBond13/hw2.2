@@ -28,5 +28,9 @@ func main() {
 	}
 	cardSvc.Add(&card.Card{Id: 1, Balance: 2340_00, Number: "2345"}, &card.Card{Id: 2, Balance: 10000_00, Number: "8945"})
 	tinkofTransfer := transfer.NewService(cardSvc, 0.5, 10)
-	fmt.Println(tinkofTransfer.Card2Card("2345", "8945", 10_000_00))
+	fmt.Println(tinkofTransfer.Card2Card("5106 2143 4523 1822",
+		"5106 2145 1234 2312", 10_000_00))
+
+	//fmt.Println(card.LunaAlgorithm("4561 2612 1234 5467"))
+	fmt.Println(cardSvc.IsValidMyCardBank("5106 2145 1234 231"))
 }
