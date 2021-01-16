@@ -65,10 +65,35 @@ func (s *Service) Card2Card(from, to string, amount int64) (total int64, ok bool
 
 }
 
-func (s *Service) Transfer(fromId int64, toNumber string, amount int64) {
-	source := s.CardSvc.SearchById(fromId)
-	target := s.CardSvc.SearchByNumber(toNumber)
+//func (s *Service) Transfer(fromId int64, toNumber string, amount int64) {
+//	if source, ok := s.CardSvc.FindById(fromId); ok{
+//		if target, ok := s.CardSvc.FindByNumber(toNumber); ok {
+//			source.Balance -= amount
+//			target.Balance += amount
+//
+//		}
+//
+//	}
+//}
 
+// Make "early exit"
+func (s *Service) Transfer(fromId int64, toNumber string, amount int64) error{
+	source, ok := s.CardSvc.FindById(fromId)
+	if !ok {
+		return TransferError("source card not found")
+	}
+
+	target, ok := s.CardSvc.FindByNumber(toNumber)
+	if !ok {
+		return TransferError("source card not found")
+	}
 	source.Balance -= amount
 	target.Balance += amount
+	return nil
+}
+
+type TransferError string
+
+func (e TransferError) Error() string {
+	return string(e)
 }

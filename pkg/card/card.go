@@ -36,6 +36,16 @@ func (s *Service) SearchByNumber(number string) *Card {
 	return nil
 }
 
+//
+func (s Service) FindByNumber(number string) (*Card, bool)  {
+	for _, card := range s.Cards{
+		if card.Number == number{
+			return card, true
+		}
+	}
+	return nil, false
+}
+
 func (s *Service) SearchById(id int64) *Card {
 	for _, card := range s.Cards {
 		if card.Id == id {
@@ -43,6 +53,15 @@ func (s *Service) SearchById(id int64) *Card {
 		}
 	}
 	return nil
+}
+
+func (s Service) FindById(id int64) (*Card, bool) {
+	for _, card := range s.Cards {
+		if card.Id == id {
+			return card, true
+		}
+	}
+	return nil, false
 }
 
 // IssuerCard добавляет карту
