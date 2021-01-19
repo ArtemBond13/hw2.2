@@ -2,9 +2,7 @@ package transfer
 
 import (
 	"errors"
-	"fmt"
 	"github.com/ArtemBond13/hw2.2/pkg/card"
-	"strings"
 )
 
 type Service struct {
@@ -20,78 +18,48 @@ func NewService(cardSVC *card.Service, percent float64, minAmount int64) *Servic
 		MinAmountTransfer: minAmount,
 	}
 }
-var(
+
+var (
 	ErrSourceCardInsufficientFunds = errors.New("sorry, there are not enough funds on the card")
-	ErrSourceCardNotFound = errors.New("this source card not found")
- 	ErrTargetCardNotFound = errors.New("this target card not found")
+	ErrSourceCardNotFound          = errors.New("this source card not found")
+	ErrTargetCardNotFound          = errors.New("this target card not found")
+	ErrSourceCardNotValid          = errors.New("this source card is not valid")
+	ErrTargetCardNotValid          = errors.New("this target card is not valid")
 )
 
 // перевод денег с карты from на карту to в количестве amount
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
-	prefix := "5106 21"
-	source, _ := s.CardSvc.FindByNumber(from)
-	target, _ := s.CardSvc.FindByNumber(to)
-
 	cardService := NewService(s.CardSvc, 0.5, 10_00)
-
 	commission := int64(float64(amount/100) * cardService.PercentTransfer)
 	if commission < cardService.MinAmountTransfer {
 		commission = cardService.MinAmountTransfer
 	}
 
-	if source == nil && target == nil {
-		total = amount + commission
-
-		return total, nil
+	if !s.CardSvc.IsValidLunaAlgorithm(from) {
+		return total, ErrSourceCardNotValid
 	}
 
-	if source == nil && target != nil {
-		if strings.HasPrefix(target.Number, prefix) == true{
-			if target.Number != from {
-				return total, ErrTargetCardNotFound
-			}
-		}
-		target.Balance += amount
-		total = amount + commission
-		fmt.Print(target.Balance, "\n")
-
-		return total, nil
+	if !s.CardSvc.IsValidLunaAlgorithm(to) {
+		return total, ErrTargetCardNotValid
 	}
 
-	if source != nil && target == nil {
-		if strings.HasPrefix(source.Number, prefix) == true{
-			if source.Number != from {
-				return total, ErrSourceCardNotFound
-			}
-		}
-		total = amount + commission
-		if source.Balance < total {
-			return total, ErrSourceCardInsufficientFunds
-		}
-		source.Balance -= total
+	source, ok := s.CardSvc.FindByNumber(from)
+	if !ok {
+		return total, ErrSourceCardNotFound
+	}
 
-		return total, nil
+	target, ok := s.CardSvc.FindByNumber(to)
+	if !ok {
+		return total, ErrTargetCardNotFound
 	}
-	if source != nil && target !=nil {
-		total = amount + commission
-		if strings.HasPrefix(source.Number, prefix) == true{
-			if source.Number != from {
-				return total, ErrSourceCardInsufficientFunds
-			}
-		}
-		if strings.HasPrefix(target.Number, prefix) == true{
-			if target.Number != to{
-				return total, ErrTargetCardNotFound
-			}
-		}
-		if source.Balance < total {
-			return total, ErrSourceCardInsufficientFunds
-		}
-		source.Balance -= total
-		target.Balance += amount
-		return total, nil
+
+	total = amount + commission
+	if source.Balance < total {
+		return total, ErrSourceCardInsufficientFunds
 	}
+	source.Balance -= total
+	target.Balance += amount
 	return total, nil
 }
 
@@ -127,7 +95,6 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 //
 //func (e TransferError) Error() string {
 //	return string(e)
-
 
 func (s Service) Transfer(fromId int64, toNumber string, amount int64) error {
 	source, ok := s.CardSvc.FindById(fromId)

@@ -1,7 +1,6 @@
 package card
 
 import (
-	"errors"
 	"strconv"
 	"strings"
 )
@@ -43,10 +42,21 @@ func (s *Service) SearchByNumber(number string) *Card {
 }
 
 //
-func (s Service) FindByNumber(number string) (*Card, bool)  {
-	for _, card := range s.Cards{
-		if card.Number == number{
+func (s Service) FindByNumber(number string) (*Card, bool) {
+	for _, card := range s.Cards {
+		if card.Number == number {
 			return card, true
+		}
+	}
+	return nil, false
+}
+
+func (s Service) FindByNumberMyService(number string) (*Card, bool) {
+	for _, card := range s.Cards {
+		if strings.HasPrefix(card.Number, "5106 21") {
+			if card.Number == number {
+				return card, true
+			}
 		}
 	}
 	return nil, false
@@ -84,25 +94,8 @@ func (s *Service) IssuerCard(id int64, issuer string, balance int64, number stri
 	return card
 }
 
-var ErrMyCardNotValid = errors.New("there card not found my service")
-// IsValidMyCardBank возвращает ошибку если карты нету в Сервисе 
-func (s *Service) IsValidMyCardBank(cardNumber string) error  {
-	prefix := "5106 21"
-	for _, card := range s.Cards {
-		if strings.HasPrefix(card.Number, prefix) == true{
-			if card.Number != cardNumber {
-				return  ErrMyCardNotValid
-			}
-		}
-	}
-	return nil
-}
-
-
-var ErrNotValidCard = errors.New("there card isn't validity")
-
 // LunaAlgorithm возвращает ощибку если
-func LunaAlgorithm(card string) error {
+func (s *Service) IsValidLunaAlgorithm(card string) bool {
 	card = strings.ReplaceAll(card, " ", "")
 	cardSlice := strings.Split(card, "")
 	sNum := make([]int, len(cardSlice))
@@ -113,7 +106,7 @@ func LunaAlgorithm(card string) error {
 	}
 
 	for i, num := range sNum {
-		if i % 2 ==0 {
+		if i%2 != 0 {
 			num *= 2
 			if num > 9 {
 				num -= 9
@@ -126,10 +119,12 @@ func LunaAlgorithm(card string) error {
 
 	totalSum := sum1 + sum2
 
-	if totalSum % 10 == 0 {
-		return  nil
-	}else {
-		return ErrNotValidCard
+	if totalSum%10 == 0 {
+		//fmt.Println("Итоговая сумма", totalSum)
+		return true
+	} else {
+		//fmt.Println("Итоговая сумма", totalSum)
+		return false
 
 	}
 }

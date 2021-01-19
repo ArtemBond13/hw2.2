@@ -31,6 +31,6 @@ func main() {
 	fmt.Println(tinkofTransfer.Card2Card("5106 2143 4523 1822",
 		"5106 2145 1234 2312", 10_000_00))
 
-	fmt.Println(card.LunaAlgorithm("4561 2612 1234 546"))
-	fmt.Println(cardSvc.IsValidMyCardBank("5106 2145 1234 231"))
+	fmt.Println("Card valid:", cardSvc.IsValidLunaAlgorithm("4222222222222"))
+	fmt.Println(cardSvc.FindByNumberMyService("5106 2145 1234 231"))
 }
