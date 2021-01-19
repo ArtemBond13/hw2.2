@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ArtemBond13/hw2.2/pkg/card"
-	"strings"
 )
 
 type Service struct {
@@ -20,18 +19,25 @@ func NewService(cardSVC *card.Service, percent float64, minAmount int64) *Servic
 		MinAmountTransfer: minAmount,
 	}
 }
-var(
+
+var (
 	ErrSourceCardInsufficientFunds = errors.New("sorry, there are not enough funds on the card")
-	ErrSourceCardNotFound = errors.New("this source card not found")
- 	ErrTargetCardNotFound = errors.New("this target card not found")
+	ErrSourceCardNotFound          = errors.New("this source card not found")
+	ErrTargetCardNotFound          = errors.New("this target card not found")
 )
 
 // перевод денег с карты from на карту to в количестве amount
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
-	prefix := "5106 21"
-	source, _ := s.CardSvc.FindByNumber(from)
-	target, _ := s.CardSvc.FindByNumber(to)
+	source, ok := s.CardSvc.FindByNumberMyService(from)
+	if !ok {
+		return 0, ErrTargetCardNotFound
+	}
+
+	target, ok := s.CardSvc.FindByNumberMyService(to)
+	if !ok {
+		return 0, ErrTargetCardNotFound
+	}
 
 	cardService := NewService(s.CardSvc, 0.5, 10_00)
 
@@ -40,18 +46,15 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 		commission = cardService.MinAmountTransfer
 	}
 
+	// Если карта другог банка перевод на карту другого банка
 	if source == nil && target == nil {
 		total = amount + commission
 
 		return total, nil
 	}
 
+	// Если карта другого банка перевод на свою карту
 	if source == nil && target != nil {
-		if strings.HasPrefix(target.Number, prefix) == true{
-			if target.Number != from {
-				return total, ErrTargetCardNotFound
-			}
-		}
 		target.Balance += amount
 		total = amount + commission
 		fmt.Print(target.Balance, "\n")
@@ -59,12 +62,8 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 		return total, nil
 	}
 
+	// Если со своей карты перевод на карту другого банка
 	if source != nil && target == nil {
-		if strings.HasPrefix(source.Number, prefix) == true{
-			if source.Number != from {
-				return total, ErrSourceCardNotFound
-			}
-		}
 		total = amount + commission
 		if source.Balance < total {
 			return total, ErrSourceCardInsufficientFunds
@@ -73,18 +72,10 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 
 		return total, nil
 	}
-	if source != nil && target !=nil {
+	// Если со своей карты перевод на свою карту банка
+	if source != nil && target != nil {
 		total = amount + commission
-		if strings.HasPrefix(source.Number, prefix) == true{
-			if source.Number != from {
-				return total, ErrSourceCardInsufficientFunds
-			}
-		}
-		if strings.HasPrefix(target.Number, prefix) == true{
-			if target.Number != to{
-				return total, ErrTargetCardNotFound
-			}
-		}
+
 		if source.Balance < total {
 			return total, ErrSourceCardInsufficientFunds
 		}
@@ -127,7 +118,6 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 //
 //func (e TransferError) Error() string {
 //	return string(e)
-
 
 func (s Service) Transfer(fromId int64, toNumber string, amount int64) error {
 	source, ok := s.CardSvc.FindById(fromId)

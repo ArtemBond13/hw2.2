@@ -34,7 +34,7 @@ func TestService_Card2Card(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{name: "MyCardBank->MyCardBank, money enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"5106 2134 1234", "5106 2134 9876 0912", 100_00}, want: 110_00, wantErr: false},
+			args: args{"5106 2134 1245 1234", "5106 2134 9876 0912", 100_00}, want: 110_00, wantErr: false},
 		{name: "MyCardBank->MyCardBank, money not enough", fields: fields{cardSVC, 0.5, 10_00},
 			args: args{"5106 2145 9876 0812", "5106 2134 9876 9078", 1000_00}, want: 1010_00, wantErr: true},
 		{name: "MyCardBank->OtherCardBank, money enough", fields: fields{cardSVC, 0.5, 10_00},
