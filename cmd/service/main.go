@@ -27,10 +27,11 @@ func main() {
 		}
 	}
 	cardSvc.Add(&card.Card{Id: 1, Balance: 2340_00, Number: "2345"}, &card.Card{Id: 2, Balance: 10000_00, Number: "8945"})
-	tinkofTransfer := transfer.NewService(cardSvc, 0.5, 10)
-	fmt.Println(tinkofTransfer.Card2Card("5106 2143 4523 1822",
-		"5106 2145 1234 2312", 10_000_00))
+	//tinkofTransfer := transfer.NewService(cardSvc, 0.5, 10)
+	//fmt.Println(tinkofTransfer.Card2Card("5106 2143 4523 1822",
+	//	"5106 2145 1234 2312", 10_000_00))
 
-	fmt.Println("Card valid:", cardSvc.IsValidLunaAlgorithm("4222222222222"))
-	fmt.Println(cardSvc.FindByNumberMyService("5106 2145 1234 231"))
+	fmt.Println("Card is valid:", cardSvc.IsValidLunaAlgorithm("374652346956782346957823694857692364857368475368"))
+
+	//fmt.Println(cardSvc.FindByNumberMyService("5106 2145 1234 231"))
 }

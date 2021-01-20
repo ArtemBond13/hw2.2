@@ -105,6 +105,13 @@ func (s *Service) IsValidLunaAlgorithm(card string) bool {
 		sNum[i], _ = strconv.Atoi(val)
 	}
 
+	//fmt.Printf("Just array %d\n",sNum)
+	for i, j := 0, len(sNum)-1; i < j; i, j = i+1, j-1 {
+		sNum[i], sNum[j] = sNum[j], sNum[i]
+	}
+	//fmt.Printf("Reverse array %d\n",sNum)
+
+
 	for i, num := range sNum {
 		if i%2 != 0 {
 			num *= 2
