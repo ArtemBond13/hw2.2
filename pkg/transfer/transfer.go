@@ -31,10 +31,13 @@ var (
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
 	cardService := NewService(s.CardSvc, 0.5, 10_00)
+
 	commission := int64(float64(amount/100) * cardService.PercentTransfer)
+
 	if commission < cardService.MinAmountTransfer {
 		commission = cardService.MinAmountTransfer
 	}
+	total = amount + commission
 
 	if !s.CardSvc.IsValidLunaAlgorithm(from) {
 		return total, ErrSourceCardNotValid
@@ -44,22 +47,20 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 		return total, ErrTargetCardNotValid
 	}
 
-	source, ok := s.CardSvc.FindByNumber(from)
-	if !ok {
-		return total, ErrSourceCardNotFound
+	//Если карта другог банка перевод на карту другого банка
+	source, err := s.CardSvc.FindByNumberMyService(from)
+	if err == nil {
+		if source.Balance < total {
+			return total, ErrSourceCardInsufficientFunds
+		}
+		source.Balance -= total
 	}
 
-	target, ok := s.CardSvc.FindByNumber(to)
-	if !ok {
-		return total, ErrTargetCardNotFound
+	target, err := s.CardSvc.FindByNumberMyService(to)
+	if err == nil {
+		target.Balance += amount
 	}
 
-	total = amount + commission
-	if source.Balance < total {
-		return total, ErrSourceCardInsufficientFunds
-	}
-	source.Balance -= total
-	target.Balance += amount
 	return total, nil
 }
 

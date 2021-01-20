@@ -1,6 +1,7 @@
 package card
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -51,15 +52,18 @@ func (s Service) FindByNumber(number string) (*Card, bool) {
 	return nil, false
 }
 
-func (s Service) FindByNumberMyService(number string) (*Card, bool) {
+var ErrCardNotFoundMyService = errors.New("there card not found our service bank")
+
+func (s Service) FindByNumberMyService(number string) (*Card, error) {
 	for _, card := range s.Cards {
 		if strings.HasPrefix(card.Number, "5106 21") {
 			if card.Number == number {
-				return card, true
+				return card, nil
 			}
 		}
 	}
-	return nil, false
+	//fmt.Printf("There card %s not found our service bank\n", number)
+	return nil, ErrCardNotFoundMyService
 }
 
 func (s *Service) SearchById(id int64) *Card {
@@ -110,7 +114,6 @@ func (s *Service) IsValidLunaAlgorithm(card string) bool {
 		sNum[i], sNum[j] = sNum[j], sNum[i]
 	}
 	//fmt.Printf("Reverse array %d\n",sNum)
-
 
 	for i, num := range sNum {
 		if i%2 != 0 {
