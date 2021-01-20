@@ -24,7 +24,8 @@ func TestService_Card2Card(t *testing.T) {
 		&card.Card{Id: 5, Balance: 3458_00, Number: "5106 2156 2672 3895"},
 		&card.Card{Id: 6, Balance: 1000_00, Number: "5106 2134 6723 7645"},
 		&card.Card{Id: 7, Balance: 1000_00, Number: "5106 2134 4562 6723"},
-		&card.Card{Id: 8, Balance: 100_00, Number: "5106 2134 9876 5436"})
+		&card.Card{Id: 8, Balance: 100_00, Number: "5106 2134 9876 5436"},
+		&card.Card{Id: 9, Balance: 300_00, Number: "5106 2156 7889 2323"})
 	tests := []struct {
 		name    string
 		fields  fields
@@ -45,6 +46,10 @@ func TestService_Card2Card(t *testing.T) {
 			args: args{"1234 4567 1233 5432", "5106 2134 4562 6723", 100_00}, want: 110_00, wantErr: false},
 		{name: "OtherCardBank->OtherCardBank", fields: fields{cardSVC, 0.5, 10_00},
 			args: args{"3452 3234 7432 3621", "1234 6543 2746 3465", 100_00}, want: 110_00, wantErr: false},
+		{name: "Source card does not belong to my cards ->OtherCardBank", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 5436", "1234 6543 2746 3465", 100_00}, want: 110_00, wantErr: false},
+		{name: "Source Card my bank -> Target card does not belong to my cards", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 9876 5436", "5106 2156 2323", 100_00}, want: 110_00, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

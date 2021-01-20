@@ -41,27 +41,31 @@ func (s *Service) SearchByNumber(number string) *Card {
 	return nil
 }
 
+var ErrCardNotFoundMyService = errors.New("there card not found our service bank")
+var ErrCardNotOurBank = errors.New("this card belongs to another bank ")
+
 //
-func (s *Service) FindByNumber(number string) (*Card, bool) {
+func (s *Service) FindByNumber(number string) (*Card, error) {
 	for _, card := range s.Cards {
-		if card.Number == number {
-			return card, true
+		if strings.HasPrefix(card.Number, "5106 21") {
+			return card, nil
 		}
 	}
-	return nil, false
+	return nil, ErrCardNotFoundMyService
 }
-
-var ErrCardNotFoundMyService = errors.New("there card not found our service bank")
 
 func (s *Service) FindByNumberMyService(number string) (*Card, error) {
 	for _, card := range s.Cards {
 		if strings.HasPrefix(card.Number, "5106 21") {
 			if card.Number == number {
 				return card, nil
+			} else if card.Number != number {
+				//fmt.Printf("This card %s not found our service", number)
+				return nil, ErrCardNotFoundMyService
 			}
 		}
 	}
-	return nil, ErrCardNotFoundMyService
+	return nil, ErrCardNotOurBank
 }
 
 func (s *Service) SearchById(id int64) *Card {

@@ -37,9 +37,15 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	}
 	total = amount + commission
 
-	//Если карта другог банка перевод на карту другого банка
 	source, err := s.CardSvc.FindByNumberMyService(from)
-	if err == nil {
+	if err != nil {
+		if err == card.ErrCardNotFoundMyService {
+			return total, card.ErrCardNotFoundMyService
+		}
+		if err == card.ErrCardNotOurBank {
+			return total, nil
+		}
+	} else {
 		if source.Balance < total {
 			return total, ErrSourceCardInsufficientFunds
 		}
@@ -47,7 +53,14 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	}
 
 	target, err := s.CardSvc.FindByNumberMyService(to)
-	if err == nil {
+	if err != nil {
+		if err == card.ErrCardNotFoundMyService {
+			return total, card.ErrCardNotFoundMyService
+		}
+		if err == card.ErrCardNotOurBank {
+			return total, nil
+		}
+	} else {
 		target.Balance += amount
 	}
 
@@ -93,8 +106,8 @@ func (s Service) Transfer(fromId int64, toNumber string, amount int64) error {
 		return ErrSourceCardNotFound
 	}
 
-	target, ok := s.CardSvc.FindByNumber(toNumber)
-	if !ok {
+	target, err := s.CardSvc.FindByNumber(toNumber)
+	if err != nil {
 		return ErrTargetCardNotFound
 	}
 
