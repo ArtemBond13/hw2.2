@@ -51,15 +51,17 @@ func (s *Service) FindByNumber(number string) (*Card, bool) {
 	return nil, false
 }
 
-func (s *Service) FindByNumberMyService(number string) (*Card, bool) {
+var ErrCardNotFoundMyService = errors.New("there card not found our service bank")
+
+func (s *Service) FindByNumberMyService(number string) (*Card, error) {
 	for _, card := range s.Cards {
 		if strings.HasPrefix(card.Number, "5106 21") {
 			if card.Number == number {
-				return card, true
+				return card, nil
 			}
 		}
 	}
-	return nil, false
+	return nil, ErrCardNotFoundMyService
 }
 
 func (s *Service) SearchById(id int64) *Card {
@@ -94,17 +96,17 @@ func (s *Service) IssuerCard(id int64, issuer string, balance int64, number stri
 	return card
 }
 
-var ErrMyCardNotValid = errors.New("there card not found my service")
-
-// IsValidMyCardBank возвращает ошибку если карты нету в Сервисе
-func (s *Service) IsValidMyCardBank(cardNumber string) error {
-	prefix := "5106 21"
-	for _, card := range s.Cards {
-		if strings.HasPrefix(card.Number, prefix) == true {
-			if card.Number != cardNumber {
-				return ErrMyCardNotValid
-			}
-		}
-	}
-	return nil
-}
+//var ErrMyCardNotValid = errors.New("there card not found my service")
+//
+//// IsValidMyCardBank возвращает ошибку если карты нету в Сервисе
+//func (s *Service) IsValidMyCardBank(cardNumber string) error {
+//	prefix := "5106 21"
+//	for _, card := range s.Cards {
+//		if strings.HasPrefix(card.Number, prefix) == true {
+//			if card.Number == cardNumber {
+//				return nil
+//			}
+//		}
+//	}
+//	return ErrMyCardNotValid
+//}

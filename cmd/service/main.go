@@ -32,6 +32,5 @@ func main() {
 		"5106 2145 1234 2312", 10_000_00))
 
 	//fmt.Println(card.LunaAlgorithm("4561 2612 1234 5467"))
-	fmt.Println(cardSvc.IsValidMyCardBank("5106 2145 1234 231"))
 	fmt.Println(cardSvc.FindByNumberMyService("5106 2145 1234 23"))
 }

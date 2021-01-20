@@ -2,7 +2,6 @@ package transfer
 
 import (
 	"errors"
-	"fmt"
 	"github.com/ArtemBond13/hw2.2/pkg/card"
 )
 
@@ -29,60 +28,29 @@ var (
 // перевод денег с карты from на карту to в количестве amount
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
-	source, ok := s.CardSvc.FindByNumberMyService(from)
-	if !ok {
-		return 0, ErrTargetCardNotFound
-	}
-
-	target, ok := s.CardSvc.FindByNumberMyService(to)
-	if !ok {
-		return 0, ErrTargetCardNotFound
-	}
-
 	cardService := NewService(s.CardSvc, 0.5, 10_00)
 
 	commission := int64(float64(amount/100) * cardService.PercentTransfer)
+
 	if commission < cardService.MinAmountTransfer {
 		commission = cardService.MinAmountTransfer
 	}
+	total = amount + commission
 
-	// Если карта другог банка перевод на карту другого банка
-	if source == nil && target == nil {
-		total = amount + commission
-
-		return total, nil
-	}
-
-	// Если карта другого банка перевод на свою карту
-	if source == nil && target != nil {
-		target.Balance += amount
-		total = amount + commission
-		fmt.Print(target.Balance, "\n")
-
-		return total, nil
-	}
-
-	// Если со своей карты перевод на карту другого банка
-	if source != nil && target == nil {
-		total = amount + commission
+	//Если карта другог банка перевод на карту другого банка
+	source, err := s.CardSvc.FindByNumberMyService(from)
+	if err == nil {
 		if source.Balance < total {
 			return total, ErrSourceCardInsufficientFunds
 		}
 		source.Balance -= total
-
-		return total, nil
 	}
-	// Если со своей карты перевод на свою карту банка
-	if source != nil && target != nil {
-		total = amount + commission
 
-		if source.Balance < total {
-			return total, ErrSourceCardInsufficientFunds
-		}
-		source.Balance -= total
+	target, err := s.CardSvc.FindByNumberMyService(to)
+	if err == nil {
 		target.Balance += amount
-		return total, nil
 	}
+
 	return total, nil
 }
 
