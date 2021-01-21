@@ -17,10 +17,14 @@ func TestService_Card2Card(t *testing.T) {
 		amount int64
 	}
 	cardSVC := card.NewService("Tinkoff Bank")
-	cardSVC.Add(&card.Card{Id: 1, Balance: 2340_00, Number: "2345"}, &card.Card{Id: 2, Balance: 10000_00, Number: "8945"},
-		&card.Card{Id: 3, Balance: 1000_00, Number: "3096"}, &card.Card{Id: 4, Balance: 45000_00, Number: "9078"},
-		&card.Card{Id: 5, Balance: 3458_00, Number: "8956"}, &card.Card{Id: 6, Balance: 1000_00, Number: "7645"},
-		&card.Card{Id: 7, Balance: 1000_00, Number: "7812"}, &card.Card{Id: 8, Balance: 100_00, Number: "5436"})
+	cardSVC.Add(&card.Card{Id: 1, Balance: 2340_00, Number: "5106 2134 1234 3452"},
+		&card.Card{Id: 2, Balance: 10000_00, Number: "5106 2134 9876 0926"},
+		&card.Card{Id: 3, Balance: 1000_00, Number: "5106 2145 9876 0881"},
+		&card.Card{Id: 4, Balance: 45000_00, Number: "5106 2134 9876 9075"},
+		&card.Card{Id: 5, Balance: 3458_00, Number: "5106 2156 2672 3825"},
+		&card.Card{Id: 6, Balance: 1000_00, Number: "5106 2134 6723 7666"},
+		&card.Card{Id: 7, Balance: 1000_00, Number: "5106 2134 4562 6790"},
+		&card.Card{Id: 8, Balance: 100_00, Number: "5106 2134 9876 5426"})
 	tests := []struct {
 		name    string
 		fields  fields
@@ -30,17 +34,27 @@ func TestService_Card2Card(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{name: "MyCardBank->MyCardBank, money enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"2345", "8945", 100_00}, want: 110_00, wantErr: false},
+			args: args{"5106 2134 1234 3452", "5106 2134 9876 0926", 100_00}, want: 110_00, wantErr: false},
 		{name: "MyCardBank->MyCardBank, money not enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"3096", "9078", 1000_00}, want: 1010_00, wantErr: true},
+			args: args{"5106 2145 9876 0881", "5106 2134 9876 9075", 1000_00}, want: 1010_00, wantErr: true},
 		{name: "MyCardBank->OtherCardBank, money enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"8956", "1234", 100_00}, want: 110_00, wantErr: false},
+			args: args{"5106 2156 2672 3825", "5121 0612 4534 1206", 100_00}, want: 110_00, wantErr: false},
 		{name: "MyCardBank->OtherCardBank, money not enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"7645", "1234", 1000_00}, want: 1010_00, wantErr: true},
+			args: args{"5106 2134 6723 7666", "4567 1234 3456 7654", 1000_00}, want: 1010_00, wantErr: false},
 		{name: "OtherCardBank->MyCardBank", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"1234", "7812", 100_00}, want: 110_00, wantErr: false},
+			args: args{"5121 0612 4534 1206", "5106 2134 4562 6790", 100_00}, want: 110_00, wantErr: false},
 		{name: "OtherCardBank->OtherCardBank", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"9876", "1234", 100_00}, want: 110_00, wantErr: false},
+			args: args{"3452 3234 7432 3238", "1234 5678 2746 1314", 100_00}, want: 110_00, wantErr: false},
+		{name: "Source card does not belong to my cards ->OtherCardBank", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 5436", "1234 6543 2746 3469", 100_00}, want: 110_00, wantErr: false},
+		{name: "Source Card my bank -> Target card does not belong to my cards", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 9876 5436", "5106 2156 2323", 100_00}, want: 110_00, wantErr: true},
+		{name: "Source and Target cards is valid", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 1234 3452", "5106 2134 9876 0926", 100_00}, want: 110_00, wantErr: false},
+		{name: "Source card is not valid", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 1234 3458", "5106 2134 9876 0926", 100_00}, want: 110_00, wantErr: true},
+		{name: "Target card is not valid", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 1234 3452", "5106 2134 9876 0922", 100_00}, want: 110_00, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
