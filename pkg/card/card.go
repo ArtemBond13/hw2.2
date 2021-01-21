@@ -2,7 +2,6 @@ package card
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -60,9 +59,6 @@ func (s *Service) FindByNumberMyService(number string) (*Card, error) {
 		if strings.HasPrefix(card.Number, "5106 21") {
 			if card.Number == number {
 				return card, nil
-			} else if card.Number != number {
-				fmt.Printf("This card %s not found our service", number)
-				return nil, ErrCardNotFoundMyService
 			}
 		}
 	}
@@ -100,18 +96,3 @@ func (s *Service) IssuerCard(id int64, issuer string, balance int64, number stri
 	s.Cards = append(s.Cards, card)
 	return card
 }
-
-//var ErrMyCardNotValid = errors.New("there card not found my service")
-//
-//// IsValidMyCardBank возвращает ошибку если карты нету в Сервисе
-//func (s *Service) IsValidMyCardBank(cardNumber string) error {
-//	prefix := "5106 21"
-//	for _, card := range s.Cards {
-//		if strings.HasPrefix(card.Number, prefix) == true {
-//			if card.Number == cardNumber {
-//				return nil
-//			}
-//		}
-//	}
-//	return ErrMyCardNotValid
-//}

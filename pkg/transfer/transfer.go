@@ -26,21 +26,71 @@ var (
 )
 
 var ErrSomethingBad = errors.New("something bad happened. Try again later")
+
 // перевод денег с карты from на карту to в количестве amount
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
-	cardService := NewService(s.CardSvc, 0.5, 10_00)
+	const (
+		percentTransfer   = 0.5
+		minAmountTransfer = 10_00
+	)
 
-	commission := int64(float64(amount/100) * cardService.PercentTransfer)
+	commission := int64(float64(amount/100) * percentTransfer)
 
-	if commission < cardService.MinAmountTransfer {
-		commission = cardService.MinAmountTransfer
+	if commission < minAmountTransfer {
+		commission = minAmountTransfer
 	}
 	total = amount + commission
 
-	source, err := s.CardSvc.FindByNumberMyService(from)
-	if err != nil {
-		switch err {
+	source, sourceErr := s.CardSvc.FindByNumber(from)
+	target, targetErr := s.CardSvc.FindByNumber(to)
+
+	if sourceErr != nil && targetErr != nil {
+		return total, nil //fmt.Errorf("source error: %v, target error %v \n", source, target)
+	}
+
+	if sourceErr != nil {
+		return total, nil //fmt.Errorf("source error: %v\n", source)
+	}
+	if targetErr != nil {
+		return total, nil //fmt.Errorf("target error: %v\n", target)
+	}
+
+	if source != nil && source.Balance < total {
+		return total, ErrSourceCardInsufficientFunds
+	}
+	if source != nil && target != nil {
+		source.Balance -= total
+		target.Balance += amount
+
+	}
+
+	return total, nil
+}
+
+func (s *Service) Card2Card2(from, to string, amount int64) (int64, error) {
+	total := int64(0)
+	const (
+		percentTransfer   = 0.5
+		minAmountTransfer = 10_00
+	)
+
+	commission := int64(float64(amount/100) * percentTransfer)
+
+	if commission < minAmountTransfer {
+		commission = minAmountTransfer
+	}
+	total = amount + commission
+
+	source, errSource := s.CardSvc.FindByNumberMyService(from)
+	if errSource == nil {
+		if source.Balance < total {
+			return total, ErrSourceCardInsufficientFunds
+		}
+		source.Balance -= total
+	}
+	if errSource != nil {
+		switch errSource {
 		case card.ErrCardNotFoundMyService:
 			return total, card.ErrCardNotFoundMyService
 		case card.ErrCardNotOurBank:
@@ -48,11 +98,6 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 		default:
 			return total, ErrSomethingBad
 		}
-	} else {
-		if source.Balance < total {
-			return total, ErrSourceCardInsufficientFunds
-		}
-		source.Balance -= total
 	}
 
 	target, err := s.CardSvc.FindByNumberMyService(to)
@@ -71,39 +116,6 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 
 	return total, nil
 }
-
-//func (s *Service) Transfer(fromId int64, toNumber string, amount int64) {
-//	if source, ok := s.CardSvc.FindById(fromId); ok{
-//		if target, ok := s.CardSvc.FindByNumber(toNumber); ok {
-//			source.Balance -= amount
-//			target.Balance += amount
-//
-//		}
-//
-//	}
-//}
-
-// Make "early exit"
-//func (s *Service) Transfer(fromId int64, toNumber string, amount int64) error{
-//	source, ok := s.CardSvc.FindById(fromId)
-//	if !ok {
-//		err := TransferError("source card not found")
-//		return err
-//	}
-//
-//	target, ok := s.CardSvc.FindByNumber(toNumber)
-//	if !ok {
-//		err := TransferError("target card not found")
-//		return err
-//	}
-//	source.Balance -= amount
-//	target.Balance += amount
-//	return nil
-//}
-//type TransferError string
-//
-//func (e TransferError) Error() string {
-//	return string(e)
 
 func (s Service) Transfer(fromId int64, toNumber string, amount int64) error {
 	source, ok := s.CardSvc.FindById(fromId)
