@@ -40,7 +40,7 @@ func TestService_Card2Card(t *testing.T) {
 		{name: "MyCardBank->OtherCardBank, money enough", fields: fields{cardSVC, 0.5, 10_00},
 			args: args{"5106 2156 2672 3825", "5121 0612 4534 1206", 100_00}, want: 110_00, wantErr: false},
 		{name: "MyCardBank->OtherCardBank, money not enough", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"5106 2134 6723 7666", "4567 1234 3456 7654", 1000_00}, want: 1010_00, wantErr: true},
+			args: args{"5106 2134 6723 7666", "4567 1234 3456 7654", 1000_00}, want: 1010_00, wantErr: false},
 		{name: "OtherCardBank->MyCardBank", fields: fields{cardSVC, 0.5, 10_00},
 			args: args{"5121 0612 4534 1206", "5106 2134 4562 6790", 100_00}, want: 110_00, wantErr: false},
 		{name: "OtherCardBank->OtherCardBank", fields: fields{cardSVC, 0.5, 10_00},
@@ -48,9 +48,9 @@ func TestService_Card2Card(t *testing.T) {
 		{name: "Source and Target cards is valid", fields: fields{cardSVC, 0.5, 10_00},
 			args: args{"5106 2134 1234 3452", "5106 2134 9876 0926", 100_00}, want: 110_00, wantErr: false},
 		{name: "Source card is not valid", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"5106 2134 1234 3458", "5106 2134 9876 0926", 100_00}, want: 110_00, wantErr: false},
-		{name: "Source card is not valid", fields: fields{cardSVC, 0.5, 10_00},
-			args: args{"5106 2134 1234 3452", "5106 2134 9876 0922", 100_00}, want: 110_00, wantErr: false},
+			args: args{"5106 2134 1234 3458", "5106 2134 9876 0926", 100_00}, want: 110_00, wantErr: true},
+		{name: "Target card is not valid", fields: fields{cardSVC, 0.5, 10_00},
+			args: args{"5106 2134 1234 3452", "5106 2134 9876 0922", 100_00}, want: 110_00, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
