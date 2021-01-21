@@ -20,12 +20,12 @@ func TestService_IsValidLunaAlgorithm(t *testing.T) {
 		{
 			name: "Card is Valid",
 			args: args{"374652346956782346957823694857692364857368475368"},
-			want: false,
+			want: true,
 		},
 		{
 			name: "Card is not Valid",
 			args: args{"374652346956782346957823694857692364857387456834"},
-			want: true,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
