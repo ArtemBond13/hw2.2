@@ -2,6 +2,7 @@ package card
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -60,7 +61,7 @@ func (s *Service) FindByNumberMyService(number string) (*Card, error) {
 			if card.Number == number {
 				return card, nil
 			} else if card.Number != number {
-				//fmt.Printf("This card %s not found our service", number)
+				fmt.Printf("This card %s not found our service", number)
 				return nil, ErrCardNotFoundMyService
 			}
 		}

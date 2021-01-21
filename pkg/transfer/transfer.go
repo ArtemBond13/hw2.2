@@ -25,6 +25,7 @@ var (
 	ErrTargetCardNotFound          = errors.New("this target card not found")
 )
 
+var ErrSomethingBad = errors.New("something bad happened. Try again later")
 // перевод денег с карты from на карту to в количестве amount
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
@@ -39,11 +40,13 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 
 	source, err := s.CardSvc.FindByNumberMyService(from)
 	if err != nil {
-		if err == card.ErrCardNotFoundMyService {
+		switch err {
+		case card.ErrCardNotFoundMyService:
 			return total, card.ErrCardNotFoundMyService
-		}
-		if err == card.ErrCardNotOurBank {
+		case card.ErrCardNotOurBank:
 			return total, nil
+		default:
+			return total, ErrSomethingBad
 		}
 	} else {
 		if source.Balance < total {
@@ -54,11 +57,13 @@ func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 
 	target, err := s.CardSvc.FindByNumberMyService(to)
 	if err != nil {
-		if err == card.ErrCardNotFoundMyService {
+		switch err {
+		case card.ErrCardNotFoundMyService:
 			return total, card.ErrCardNotFoundMyService
-		}
-		if err == card.ErrCardNotOurBank {
+		case card.ErrCardNotOurBank:
 			return total, nil
+		default:
+			return total, ErrSomethingBad
 		}
 	} else {
 		target.Balance += amount
