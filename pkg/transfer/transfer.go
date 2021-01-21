@@ -2,7 +2,6 @@ package transfer
 
 import (
 	"errors"
-	"fmt"
 	"github.com/ArtemBond13/hw2.2/pkg/card"
 )
 
@@ -20,91 +19,103 @@ func NewService(cardSVC *card.Service, percent float64, minAmount int64) *Servic
 	}
 }
 
-var ErrSourceCardInsufficientFunds = errors.New("sorry, there are not enough funds on the card")
+var (
+	ErrSourceCardInsufficientFunds = errors.New("sorry, there are not enough funds on the card")
+	ErrSourceCardNotFound          = errors.New("this source card not found")
+	ErrTargetCardNotFound          = errors.New("this target card not found")
+)
+
+var ErrSomethingBad = errors.New("something bad happened. Try again later")
+
 // перевод денег с карты from на карту to в количестве amount
 func (s *Service) Card2Card(from, to string, amount int64) (int64, error) {
 	total := int64(0)
-	source := s.CardSvc.SearchByNumber(from)
-	target := s.CardSvc.SearchByNumber(to)
-	cardService := NewService(s.CardSvc, 0.5, 10_00)
+	const (
+		percentTransfer   = 0.5
+		minAmountTransfer = 10_00
+	)
 
-	commission := int64(float64(amount/100) * cardService.PercentTransfer)
-	if commission < cardService.MinAmountTransfer {
-		commission = cardService.MinAmountTransfer
+	commission := int64(float64(amount/100) * percentTransfer)
+
+	if commission < minAmountTransfer {
+		commission = minAmountTransfer
+	}
+	total = amount + commission
+
+	source, sourceErr := s.CardSvc.FindByNumber(from)
+	target, targetErr := s.CardSvc.FindByNumber(to)
+
+	if sourceErr != nil && targetErr != nil {
+		return total, nil //fmt.Errorf("source error: %v, target error %v \n", source, target)
 	}
 
-	if source == nil && target == nil {
-		total = amount + commission
-
-		return total, nil
+	if sourceErr != nil {
+		return total, nil //fmt.Errorf("source error: %v\n", source)
+	}
+	if targetErr != nil {
+		return total, nil //fmt.Errorf("target error: %v\n", target)
 	}
 
-	if source == nil && target != nil {
-		target.Balance += amount
-		total = amount + commission
-		fmt.Print(target.Balance, "\n")
-
-		return total, nil
+	if source != nil && source.Balance < total {
+		return total, ErrSourceCardInsufficientFunds
 	}
-
-	if source != nil && target == nil {
-		total = amount + commission
-		if source.Balance < total {
-			return total, ErrSourceCardInsufficientFunds
-		}
-		source.Balance -= total
-
-		return total, nil
-	}
-	if source != nil && target !=nil {
-		total = amount + commission
-		if source.Balance < total {
-			return total, ErrSourceCardInsufficientFunds
-		}
+	if source != nil && target != nil {
 		source.Balance -= total
 		target.Balance += amount
-		return total, nil
+
 	}
+
 	return total, nil
 }
 
-//func (s *Service) Transfer(fromId int64, toNumber string, amount int64) {
-//	if source, ok := s.CardSvc.FindById(fromId); ok{
-//		if target, ok := s.CardSvc.FindByNumber(toNumber); ok {
-//			source.Balance -= amount
-//			target.Balance += amount
-//
-//		}
-//
-//	}
-//}
+func (s *Service) Card2Card2(from, to string, amount int64) (int64, error) {
+	total := int64(0)
+	const (
+		percentTransfer   = 0.5
+		minAmountTransfer = 10_00
+	)
 
-// Make "early exit"
-//func (s *Service) Transfer(fromId int64, toNumber string, amount int64) error{
-//	source, ok := s.CardSvc.FindById(fromId)
-//	if !ok {
-//		err := TransferError("source card not found")
-//		return err
-//	}
-//
-//	target, ok := s.CardSvc.FindByNumber(toNumber)
-//	if !ok {
-//		err := TransferError("target card not found")
-//		return err
-//	}
-//	source.Balance -= amount
-//	target.Balance += amount
-//	return nil
-//}
-//type TransferError string
-//
-//func (e TransferError) Error() string {
-//	return string(e)
+	commission := int64(float64(amount/100) * percentTransfer)
 
-var (
-	ErrSourceCardNotFound = errors.New("source card not found")
-	ErrTargetCardNotFound = errors.New("target card not found")
-)
+	if commission < minAmountTransfer {
+		commission = minAmountTransfer
+	}
+	total = amount + commission
+
+	source, errSource := s.CardSvc.FindByNumberMyService(from)
+	if errSource == nil {
+		if source.Balance < total {
+			return total, ErrSourceCardInsufficientFunds
+		}
+		source.Balance -= total
+	}
+	if errSource != nil {
+		switch errSource {
+		case card.ErrCardNotFoundMyService:
+			return total, card.ErrCardNotFoundMyService
+		case card.ErrCardNotOurBank:
+			return total, nil
+		default:
+			return total, ErrSomethingBad
+		}
+	}
+
+	target, err := s.CardSvc.FindByNumberMyService(to)
+	if err != nil {
+		switch err {
+		case card.ErrCardNotFoundMyService:
+			return total, card.ErrCardNotFoundMyService
+		case card.ErrCardNotOurBank:
+			return total, nil
+		default:
+			return total, ErrSomethingBad
+		}
+	} else {
+		target.Balance += amount
+	}
+
+	return total, nil
+}
 
 func (s Service) Transfer(fromId int64, toNumber string, amount int64) error {
 	source, ok := s.CardSvc.FindById(fromId)
@@ -112,8 +123,8 @@ func (s Service) Transfer(fromId int64, toNumber string, amount int64) error {
 		return ErrSourceCardNotFound
 	}
 
-	target, ok := s.CardSvc.FindByNumber(toNumber)
-	if !ok {
+	target, err := s.CardSvc.FindByNumber(toNumber)
+	if err != nil {
 		return ErrTargetCardNotFound
 	}
 
